@@ -1,35 +1,35 @@
-#include "../../include/hpxfft/distributed/agas.hpp"
+#include "../../../include/hpxfft/2D/distributed/agas.hpp"
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/modules/components.hpp>
 
 // HPX_REGISTER_COMPONENT() exposes the component creation
 // through hpx::new_<>().
-typedef hpx::components::component<hpxfft::distributed::agas_server> agas_server_type;
+typedef hpx::components::component<hpxfft::fft2D::distributed::agas_server> agas_server_type;
 HPX_REGISTER_COMPONENT(agas_server_type, agas_server)
 
 // HPX_REGISTER_ACTION() exposes the component member function for remote
 // invocation.
-// typedef hpxfft::distributed::agas_server::fft_2d_r2c_action fft_2d_r2c_action;
+// typedef hpxfft::fft2D::distributed::agas_server::fft_2d_r2c_action fft_2d_r2c_action;
 HPX_REGISTER_ACTION(fft_2d_r2c_action)
 
-// typedef hpxfft::distributed::agas_server::initialize_action initialize_action;
+// typedef hpxfft::fft2D::distributed::agas_server::initialize_action initialize_action;
 HPX_REGISTER_ACTION(initialize_action)
 
 // FFT backend
-void hpxfft::distributed::agas_server::fft_1d_r2c_inplace(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::fft_1d_r2c_inplace(const std::size_t i)
 {
     fftw_r2c_adapter_.execute_r2c(values_vec_.row(i), reinterpret_cast<fftw_complex *>(values_vec_.row(i)));
 }
 
-void hpxfft::distributed::agas_server::fft_1d_c2c_inplace(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::fft_1d_c2c_inplace(const std::size_t i)
 {
     fftw_c2c_adapter_.execute_c2c(reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)),
                                   reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)));
 }
 
 // split data for communication
-void hpxfft::distributed::agas_server::split_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::split_vec(const std::size_t i)
 {
     for (std::size_t j = 0; j < num_localities_; ++j)
     {  // std::move same performance
@@ -39,7 +39,7 @@ void hpxfft::distributed::agas_server::split_vec(const std::size_t i)
     }
 }
 
-void hpxfft::distributed::agas_server::split_trans_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::split_trans_vec(const std::size_t i)
 {
     for (std::size_t j = 0; j < num_localities_; ++j)
     {  // std::move same performance
@@ -50,7 +50,7 @@ void hpxfft::distributed::agas_server::split_trans_vec(const std::size_t i)
 }
 
 // scatter communication
-void hpxfft::distributed::agas_server::communicate_scatter_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::communicate_scatter_vec(const std::size_t i)
 {
     if (this_locality_ != i)
     {
@@ -68,7 +68,7 @@ void hpxfft::distributed::agas_server::communicate_scatter_vec(const std::size_t
     }
 }
 
-void hpxfft::distributed::agas_server::communicate_scatter_trans_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::communicate_scatter_trans_vec(const std::size_t i)
 {
     if (this_locality_ != i)
     {
@@ -88,14 +88,14 @@ void hpxfft::distributed::agas_server::communicate_scatter_trans_vec(const std::
 }
 
 // all to all communication
-void hpxfft::distributed::agas_server::communicate_all_to_all_vec()
+void hpxfft::fft2D::distributed::agas_server::communicate_all_to_all_vec()
 {
     communication_vec_ =
         hpx::collectives::all_to_all(communicators_[0], std::move(values_prep_), hpx::collectives::generation_arg(1))
             .get();
 }
 
-void hpxfft::distributed::agas_server::communicate_all_to_all_trans_vec()
+void hpxfft::fft2D::distributed::agas_server::communicate_all_to_all_trans_vec()
 {
     communication_vec_ = hpx::collectives::all_to_all(
                              communicators_[0], std::move(trans_values_prep_), hpx::collectives::generation_arg(2))
@@ -103,7 +103,7 @@ void hpxfft::distributed::agas_server::communicate_all_to_all_trans_vec()
 }
 
 // transpose after communication
-void hpxfft::distributed::agas_server::transpose_y_to_x(const std::size_t k, const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::transpose_y_to_x(const std::size_t k, const std::size_t i)
 {
     std::size_t index_in;
     std::size_t index_out;
@@ -124,7 +124,7 @@ void hpxfft::distributed::agas_server::transpose_y_to_x(const std::size_t k, con
     }
 }
 
-void hpxfft::distributed::agas_server::transpose_x_to_y(const std::size_t j, const std::size_t i)
+void hpxfft::fft2D::distributed::agas_server::transpose_x_to_y(const std::size_t j, const std::size_t i)
 {
     std::size_t index_in;
     std::size_t index_out;
@@ -146,7 +146,7 @@ void hpxfft::distributed::agas_server::transpose_x_to_y(const std::size_t j, con
 }
 
 // 2D FFT algorithm
-hpxfft::distributed::vector_2d hpxfft::distributed::agas_server::fft_2d_r2c()
+hpxfft::fft2D::distributed::vector_2d hpxfft::fft2D::distributed::agas_server::fft_2d_r2c()
 {
     // first dimension
     for (std::size_t i = 0; i < n_x_local_; ++i)
@@ -300,8 +300,8 @@ hpxfft::distributed::vector_2d hpxfft::distributed::agas_server::fft_2d_r2c()
 }
 
 // initialization
-void hpxfft::distributed::agas_server::initialize(
-    hpxfft::distributed::vector_2d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG)
+void hpxfft::fft2D::distributed::agas_server::initialize(
+    hpxfft::fft2D::distributed::vector_2d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG)
 {
     // move data into own structure
     values_vec_ = std::move(values_vec);
@@ -317,7 +317,7 @@ void hpxfft::distributed::agas_server::initialize(
     dim_c_y_part_ = 2 * dim_c_y_ / num_localities_;
     dim_c_x_part_ = 2 * dim_c_x_ / num_localities_;
     // resize other data structures
-    trans_values_vec_ = std::move(hpxfft::distributed::vector_2d(n_y_local_, 2 * dim_c_x_));
+    trans_values_vec_ = std::move(hpxfft::fft2D::distributed::vector_2d(n_y_local_, 2 * dim_c_x_));
     values_prep_.resize(num_localities_);
     trans_values_prep_.resize(num_localities_);
     for (std::size_t i = 0; i < num_localities_; ++i)

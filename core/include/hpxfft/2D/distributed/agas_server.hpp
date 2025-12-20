@@ -1,53 +1,65 @@
 #pragma once
-#ifndef hpxfft_distributed_loop_H_INCLUDED
-#define hpxfft_distributed_loop_H_INCLUDED
+#ifndef hpxfft_distributed_agas_server_H_INCLUDED
+#define hpxfft_distributed_agas_server_H_INCLUDED
 
-#include "../util/adapter_fftw.hpp"
-#include "../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
+#include "../../util/adapter_fftw.hpp"
+#include "../../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
 #include <hpx/future.hpp>
 #include <hpx/modules/collectives.hpp>
 #include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
 
 typedef double real;
 
-namespace hpxfft::distributed
+namespace hpxfft::fft2D::distributed
 {
 using vector_2d = hpxfft::util::vector_2d<real>;
 
-struct loop
+struct agas_server : hpx::components::component_base<agas_server>
 {
     typedef std::vector<hpx::future<void>> vector_future;
     typedef std::vector<std::vector<real>> vector_comm;
 
   public:
-    loop() = default;
+    agas_server() = default;
 
     void initialize(vector_2d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG);
 
     vector_2d fft_2d_r2c();
 
-    real get_measurement(std::string name);
-
   private:
     // FFT backend
     void fft_1d_r2c_inplace(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, fft_1d_r2c_inplace, fft_1d_r2c_inplace_action)
     void fft_1d_c2c_inplace(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, fft_1d_c2c_inplace, fft_1d_c2c_inplace_action)
 
     // split data for communication
     void split_vec(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, split_vec, split_vec_action)
+
     void split_trans_vec(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, split_trans_vec, split_trans_vec_action)
 
     // scatter communication
     void communicate_scatter_vec(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, communicate_scatter_vec, communicate_scatter_vec_action)
+
     void communicate_scatter_trans_vec(const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, communicate_scatter_trans_vec, communicate_scatter_trans_vec_action)
 
     // all to all communication
     void communicate_all_to_all_vec();
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, communicate_all_to_all_vec, communicate_all_to_all_vec_action)
+
     void communicate_all_to_all_trans_vec();
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, communicate_all_to_all_trans_vec, communicate_all_to_all_trans_vec_action)
 
     // transpose after communication
     void transpose_y_to_x(const std::size_t k, const std::size_t i);
-    void transpose_x_to_y(const std::size_t j, const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, transpose_y_to_x, transpose_y_to_x_action)
+
+    void transpose_x_to_y(const std::size_t k, const std::size_t i);
+    HPX_DEFINE_COMPONENT_ACTION(agas_server, transpose_x_to_y, transpose_x_to_y_action)
 
   private:
     // parameters
@@ -63,10 +75,13 @@ struct loop
     vector_2d values_vec_;
     vector_2d trans_values_vec_;
     // future vectors
-    std::vector<hpx::future<std::vector<real>>> communication_futures_;
-    // time measurement
-    hpx::chrono::high_resolution_timer t_ = hpx::chrono::high_resolution_timer();
-    std::map<std::string, real> measurements_;
+    vector_future r2c_futures_;
+    vector_future split_vec_futures_;
+    std::vector<hpx::shared_future<void>> communication_futures_;
+    std::vector<vector_future> trans_y_to_x_futures_;
+    vector_future c2c_futures_;
+    vector_future split_trans_vec_futures_;
+    std::vector<vector_future> trans_x_to_y_futures_;
     // communication vectors
     vector_comm values_prep_;
     vector_comm trans_values_prep_;
@@ -78,5 +93,10 @@ struct loop
     std::vector<const char *> basenames_;
     std::vector<hpx::collectives::communicator> communicators_;
 };
-}  // namespace hpxfft::distributed
-#endif  // hpxfft_distributed_loop_H_INCLUDED
+}  // namespace hpxfft::fft2D::distributed
+
+HPX_DEFINE_COMPONENT_ACTION(hpxfft::fft2D::distributed::agas_server, initialize, initialize_action)
+
+HPX_DEFINE_COMPONENT_ACTION(hpxfft::fft2D::distributed::agas_server, fft_2d_r2c, fft_2d_r2c_action)
+
+#endif  // hpxfft_distributed_agas_server_H_INCLUDED

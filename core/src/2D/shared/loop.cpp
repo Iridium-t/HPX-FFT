@@ -1,21 +1,21 @@
-#include "../../include/hpxfft/shared/loop.hpp"
+#include "../../../include/hpxfft/2D/shared/loop.hpp"
 
 #include <hpx/parallel/algorithms/for_loop.hpp>
 
 // FFT backend
-void hpxfft::shared::loop::fft_1d_r2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::loop::fft_1d_r2c_inplace(const std::size_t i)
 {
     fftw_r2c_adapter_.execute_r2c(values_vec_.row(i), reinterpret_cast<fftw_complex *>(values_vec_.row(i)));
 }
 
-void hpxfft::shared::loop::fft_1d_c2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::loop::fft_1d_c2c_inplace(const std::size_t i)
 {
     fftw_c2c_adapter_.execute_c2c(reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)),
                                   reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)));
 }
 
 // transpose with write running index
-void hpxfft::shared::loop::transpose_shared_y_to_x(const std::size_t index)
+void hpxfft::fft2D::shared::loop::transpose_shared_y_to_x(const std::size_t index)
 {
     for (std::size_t index_trans = 0; index_trans < dim_c_x_; ++index_trans)
     {
@@ -24,7 +24,7 @@ void hpxfft::shared::loop::transpose_shared_y_to_x(const std::size_t index)
     }
 }
 
-// void hpxfft::shared::loop::transpose_shared_x_to_y(const std::size_t index)
+// void hpxfft::fft2D::shared::loop::transpose_shared_x_to_y(const std::size_t index)
 // {
 //     for( std::size_t index_trans = 0; index_trans < dim_c_y_; ++index_trans)
 //     {
@@ -34,7 +34,7 @@ void hpxfft::shared::loop::transpose_shared_y_to_x(const std::size_t index)
 // }
 
 // transpose with read running index
-// void hpxfft::shared::loop::transpose_shared_y_to_x(const std::size_t index_trans)
+// void hpxfft::fft2D::shared::loop::transpose_shared_y_to_x(const std::size_t index_trans)
 // {
 //     for( std::size_t index = 0; index < dim_c_y_; ++index)
 //     {
@@ -43,7 +43,7 @@ void hpxfft::shared::loop::transpose_shared_y_to_x(const std::size_t index)
 //     }
 // }
 
-void hpxfft::shared::loop::transpose_shared_x_to_y(const std::size_t index_trans)
+void hpxfft::fft2D::shared::loop::transpose_shared_x_to_y(const std::size_t index_trans)
 {
     for (std::size_t index = 0; index < dim_c_x_; ++index)
     {
@@ -53,7 +53,7 @@ void hpxfft::shared::loop::transpose_shared_x_to_y(const std::size_t index_trans
 }
 
 // 2D FFT algorithm
-hpxfft::shared::vector_2d hpxfft::shared::loop::fft_2d_r2c_par()
+hpxfft::fft2D::shared::vector_2d hpxfft::fft2D::shared::loop::fft_2d_r2c_par()
 {
     /////////////////////////////////////////////////////////////////
     // first dimension
@@ -112,7 +112,7 @@ hpxfft::shared::vector_2d hpxfft::shared::loop::fft_2d_r2c_par()
     return std::move(values_vec_);
 }
 
-hpxfft::shared::vector_2d hpxfft::shared::loop::fft_2d_r2c_seq()
+hpxfft::fft2D::shared::vector_2d hpxfft::fft2D::shared::loop::fft_2d_r2c_seq()
 {
     /////////////////////////////////////////////////////////////////
     // first dimension
@@ -155,7 +155,7 @@ hpxfft::shared::vector_2d hpxfft::shared::loop::fft_2d_r2c_seq()
 }
 
 // initialization
-void hpxfft::shared::loop::initialize(vector_2d values_vec, const std::string PLAN_FLAG)
+void hpxfft::fft2D::shared::loop::initialize(vector_2d values_vec, const std::string PLAN_FLAG)
 {
     // move data into own data structure
     values_vec_ = std::move(values_vec);
@@ -191,9 +191,9 @@ void hpxfft::shared::loop::initialize(vector_2d values_vec, const std::string PL
 }
 
 // helpers
-real hpxfft::shared::loop::get_measurement(std::string name) { return measurements_[name]; }
+real hpxfft::fft2D::shared::loop::get_measurement(std::string name) { return measurements_[name]; }
 
-void hpxfft::shared::loop::write_plans_to_file(std::string file_path)
+void hpxfft::fft2D::shared::loop::write_plans_to_file(std::string file_path)
 {
     // Open file
     FILE *file_name = fopen(file_path.c_str(), "a");

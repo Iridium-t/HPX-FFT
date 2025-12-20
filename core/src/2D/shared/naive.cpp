@@ -1,19 +1,19 @@
-#include "../../include/hpxfft/shared/naive.hpp"
+#include "../../../include/hpxfft/2D/shared/naive.hpp"
 
 // FFT backend
-void hpxfft::shared::naive::fft_1d_r2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::naive::fft_1d_r2c_inplace(const std::size_t i)
 {
     fftw_r2c_adapter_.execute_r2c(values_vec_.row(i), reinterpret_cast<fftw_complex *>(values_vec_.row(i)));
 }
 
-void hpxfft::shared::naive::fft_1d_c2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::naive::fft_1d_c2c_inplace(const std::size_t i)
 {
     fftw_c2c_adapter_.execute_c2c(reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)),
                                   reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)));
 }
 
 // transpose with read running index
-void hpxfft::shared::naive::transpose_shared_y_to_x(const std::size_t index_trans)
+void hpxfft::fft2D::shared::naive::transpose_shared_y_to_x(const std::size_t index_trans)
 {
     for (std::size_t index = 0; index < dim_c_y_; ++index)
     {
@@ -22,7 +22,7 @@ void hpxfft::shared::naive::transpose_shared_y_to_x(const std::size_t index_tran
     }
 }
 
-void hpxfft::shared::naive::transpose_shared_x_to_y(const std::size_t index_trans)
+void hpxfft::fft2D::shared::naive::transpose_shared_x_to_y(const std::size_t index_trans)
 {
     for (std::size_t index = 0; index < dim_c_x_; ++index)
     {
@@ -32,22 +32,22 @@ void hpxfft::shared::naive::transpose_shared_x_to_y(const std::size_t index_tran
 }
 
 // wrappers
-void hpxfft::shared::naive::fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_r2c_inplace(i); }
+void hpxfft::fft2D::shared::naive::fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_r2c_inplace(i); }
 
-void hpxfft::shared::naive::fft_1d_c2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_c2c_inplace(i); }
+void hpxfft::fft2D::shared::naive::fft_1d_c2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_c2c_inplace(i); }
 
-void hpxfft::shared::naive::transpose_shared_y_to_x_wrapper(naive *th, const std::size_t index_trans)
+void hpxfft::fft2D::shared::naive::transpose_shared_y_to_x_wrapper(naive *th, const std::size_t index_trans)
 {
     th->transpose_shared_y_to_x(index_trans);
 }
 
-void hpxfft::shared::naive::transpose_shared_x_to_y_wrapper(naive *th, const std::size_t index_trans)
+void hpxfft::fft2D::shared::naive::transpose_shared_x_to_y_wrapper(naive *th, const std::size_t index_trans)
 {
     th->transpose_shared_x_to_y(index_trans);
 }
 
 // 2D FFT algorithm
-hpxfft::shared::vector_2d hpxfft::shared::naive::fft_2d_r2c()
+hpxfft::fft2D::shared::vector_2d hpxfft::fft2D::shared::naive::fft_2d_r2c()
 {
     auto start_total = t_.now();
     // first dimension
@@ -60,7 +60,7 @@ hpxfft::shared::vector_2d hpxfft::shared::naive::fft_2d_r2c()
             [=, this](hpx::future<void> r)
             {
                 r.get();
-                return hpx::async(&hpxfft::shared::naive::transpose_shared_y_to_x_wrapper, this, i);
+                return hpx::async(&hpxfft::fft2D::shared::naive::transpose_shared_y_to_x_wrapper, this, i);
             });
     }
     hpx::shared_future<vector_future> all_trans_y_to_x_futures = hpx::when_all(trans_y_to_x_futures_);
@@ -79,7 +79,7 @@ hpxfft::shared::vector_2d hpxfft::shared::naive::fft_2d_r2c()
             [=, this](hpx::future<void> r)
             {
                 r.get();
-                return hpx::async(&hpxfft::shared::naive::transpose_shared_x_to_y_wrapper, this, i);
+                return hpx::async(&hpxfft::fft2D::shared::naive::transpose_shared_x_to_y_wrapper, this, i);
             });
     }
     hpx::shared_future<vector_future> all_trans_x_to_y_futures = hpx::when_all(trans_x_to_y_futures_);
@@ -94,7 +94,7 @@ hpxfft::shared::vector_2d hpxfft::shared::naive::fft_2d_r2c()
 }
 
 // initialization
-void hpxfft::shared::naive::initialize(hpxfft::shared::vector_2d values_vec, const std::string PLAN_FLAG)
+void hpxfft::fft2D::shared::naive::initialize(hpxfft::fft2D::shared::vector_2d values_vec, const std::string PLAN_FLAG)
 {
     // move data into own data structure
     values_vec_ = std::move(values_vec);
@@ -103,7 +103,7 @@ void hpxfft::shared::naive::initialize(hpxfft::shared::vector_2d values_vec, con
     dim_c_y_ = values_vec_.n_col() / 2;
     dim_r_y_ = 2 * dim_c_y_ - 2;
     // resize transposed data structure
-    trans_values_vec_ = std::move(hpxfft::shared::vector_2d(dim_c_y_, 2 * dim_c_x_));
+    trans_values_vec_ = std::move(hpxfft::fft2D::shared::vector_2d(dim_c_y_, 2 * dim_c_x_));
     // create FFTW plans
     PLAN_FLAG_ = hpxfft::util::string_to_fftw_plan_flag(PLAN_FLAG);
     // r2c in y-direction
@@ -126,4 +126,4 @@ void hpxfft::shared::naive::initialize(hpxfft::shared::vector_2d values_vec, con
 }
 
 // helpers
-real hpxfft::shared::naive::get_measurement(std::string name) { return measurements_[name]; }
+real hpxfft::fft2D::shared::naive::get_measurement(std::string name) { return measurements_[name]; }

@@ -2,14 +2,14 @@
 #ifndef hpxfft_shared_agas_server_H_INCLUDED
 #define hpxfft_shared_agas_server_H_INCLUDED
 
-#include "../util/adapter_fftw.hpp"
-#include "../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
+#include "../../util/adapter_fftw.hpp"
+#include "../../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
 #include <hpx/future.hpp>
 #include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
 
 typedef double real;
 
-namespace hpxfft::shared
+namespace hpxfft::fft2D::shared
 {
 using vector_2d = hpxfft::util::vector_2d<real>;
 
@@ -55,10 +55,10 @@ struct agas_server : hpx::components::component_base<agas_server>
     vector_future trans_x_to_y_futures_;
 };
 
-}  // namespace hpxfft::shared
+}  // namespace hpxfft::fft2D::shared
 
-HPX_DEFINE_COMPONENT_ACTION(hpxfft::shared::agas_server, fft_2d_r2c, fft_2d_r2c_action)
+HPX_DEFINE_COMPONENT_ACTION(hpxfft::fft2D::shared::agas_server, fft_2d_r2c, fft_2d_r2c_action)
 
-HPX_DEFINE_COMPONENT_ACTION(hpxfft::shared::agas_server, initialize, initialize_action)
+HPX_DEFINE_COMPONENT_ACTION(hpxfft::fft2D::shared::agas_server, initialize, initialize_action)
 
 #endif  // hpxfft_shared_agas_server_H_INCLUDED

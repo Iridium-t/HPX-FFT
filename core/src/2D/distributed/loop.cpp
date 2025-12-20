@@ -1,22 +1,22 @@
-#include "../../include/hpxfft/distributed/loop.hpp"
+#include "../../../include/hpxfft/2D/distributed/loop.hpp"
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/parallel/algorithms/for_loop.hpp>
 
 // FFT backend
-void hpxfft::distributed::loop::fft_1d_r2c_inplace(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::fft_1d_r2c_inplace(const std::size_t i)
 {
     fftw_r2c_adapter_.execute_r2c(values_vec_.row(i), reinterpret_cast<fftw_complex *>(values_vec_.row(i)));
 }
 
-void hpxfft::distributed::loop::fft_1d_c2c_inplace(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::fft_1d_c2c_inplace(const std::size_t i)
 {
     fftw_c2c_adapter_.execute_c2c(reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)),
                                   reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)));
 }
 
 // split data for communication
-void hpxfft::distributed::loop::split_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::split_vec(const std::size_t i)
 {
     for (std::size_t j = 0; j < num_localities_; ++j)
     {  // std::move same performance
@@ -26,7 +26,7 @@ void hpxfft::distributed::loop::split_vec(const std::size_t i)
     }
 }
 
-void hpxfft::distributed::loop::split_trans_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::split_trans_vec(const std::size_t i)
 {
     for (std::size_t j = 0; j < num_localities_; ++j)
     {  // std::move same performance
@@ -36,7 +36,7 @@ void hpxfft::distributed::loop::split_trans_vec(const std::size_t i)
     }
 }
 
-void hpxfft::distributed::loop::communicate_scatter_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::communicate_scatter_vec(const std::size_t i)
 {
     if (this_locality_ != i)
     {
@@ -52,7 +52,7 @@ void hpxfft::distributed::loop::communicate_scatter_vec(const std::size_t i)
     }
 }
 
-void hpxfft::distributed::loop::communicate_scatter_trans_vec(const std::size_t i)
+void hpxfft::fft2D::distributed::loop::communicate_scatter_trans_vec(const std::size_t i)
 {
     if (this_locality_ != i)
     {
@@ -69,14 +69,14 @@ void hpxfft::distributed::loop::communicate_scatter_trans_vec(const std::size_t 
 }
 
 // all to all communication
-void hpxfft::distributed::loop::communicate_all_to_all_vec()
+void hpxfft::fft2D::distributed::loop::communicate_all_to_all_vec()
 {
     communication_vec_ =
         hpx::collectives::all_to_all(communicators_[0], std::move(values_prep_), hpx::collectives::generation_arg(1))
             .get();
 }
 
-void hpxfft::distributed::loop::communicate_all_to_all_trans_vec()
+void hpxfft::fft2D::distributed::loop::communicate_all_to_all_trans_vec()
 {
     communication_vec_ = hpx::collectives::all_to_all(
                              communicators_[0], std::move(trans_values_prep_), hpx::collectives::generation_arg(2))
@@ -84,7 +84,7 @@ void hpxfft::distributed::loop::communicate_all_to_all_trans_vec()
 }
 
 // transpose after communication
-void hpxfft::distributed::loop::transpose_y_to_x(const std::size_t k, const std::size_t i)
+void hpxfft::fft2D::distributed::loop::transpose_y_to_x(const std::size_t k, const std::size_t i)
 {
     std::size_t index_in;
     std::size_t index_out;
@@ -105,7 +105,7 @@ void hpxfft::distributed::loop::transpose_y_to_x(const std::size_t k, const std:
     }
 }
 
-void hpxfft::distributed::loop::transpose_x_to_y(const std::size_t j, const std::size_t i)
+void hpxfft::fft2D::distributed::loop::transpose_x_to_y(const std::size_t j, const std::size_t i)
 {
     std::size_t index_in;
     std::size_t index_out;
@@ -127,7 +127,7 @@ void hpxfft::distributed::loop::transpose_x_to_y(const std::size_t j, const std:
 }
 
 // 2D FFT algorithm
-hpxfft::distributed::vector_2d hpxfft::distributed::loop::fft_2d_r2c()
+hpxfft::fft2D::distributed::vector_2d hpxfft::fft2D::distributed::loop::fft_2d_r2c()
 {
     /////////////////////////////////////////////////////////////////
     // first dimension
@@ -272,8 +272,8 @@ hpxfft::distributed::vector_2d hpxfft::distributed::loop::fft_2d_r2c()
 }
 
 // initialization
-void hpxfft::distributed::loop::initialize(
-    hpxfft::distributed::vector_2d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG)
+void hpxfft::fft2D::distributed::loop::initialize(
+    hpxfft::fft2D::distributed::vector_2d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG)
 {
     // move data into own structure
     values_vec_ = std::move(values_vec);
@@ -289,7 +289,7 @@ void hpxfft::distributed::loop::initialize(
     dim_c_y_part_ = 2 * dim_c_y_ / num_localities_;
     dim_c_x_part_ = 2 * dim_c_x_ / num_localities_;
     // resize other data structures
-    trans_values_vec_ = std::move(hpxfft::distributed::vector_2d(n_y_local_, 2 * dim_c_x_));
+    trans_values_vec_ = std::move(hpxfft::fft2D::distributed::vector_2d(n_y_local_, 2 * dim_c_x_));
     values_prep_.resize(num_localities_);
     trans_values_prep_.resize(num_localities_);
     for (std::size_t i = 0; i < num_localities_; ++i)
@@ -349,4 +349,4 @@ void hpxfft::distributed::loop::initialize(
 }
 
 // helpers
-real hpxfft::distributed::loop::get_measurement(std::string name) { return measurements_[name]; }
+real hpxfft::fft2D::distributed::loop::get_measurement(std::string name) { return measurements_[name]; }

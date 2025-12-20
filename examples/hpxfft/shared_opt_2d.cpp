@@ -1,4 +1,4 @@
-#include "hpxfft/shared/opt.hpp"            // for hpxfft::shared::opt, hpxfft::shared::vector_2d
+#include "hpxfft/2D/shared/opt.hpp"            // for hpxfft::fft2D::shared::opt, hpxfft::fft2D::shared::vector_2d
 #include "hpxfft/util/create_dir.hpp"       // for hpxfft::util::create_parent_dir
 #include "hpxfft/util/print_vector_2d.hpp"  // for hpxfft::util::print_vector_2d
 #include <fstream>                          // for std::ofstream
@@ -29,7 +29,7 @@ int hpx_main(hpx::program_options::variables_map &vm)
 
     ////////////////////////////////////////////////////////////////
     // Initialization
-    hpxfft::shared::vector_2d values_vec(dim_c_x, 2 * dim_c_y);
+    hpxfft::fft2D::shared::vector_2d values_vec(dim_c_x, 2 * dim_c_y);
     for (std::size_t i = 0; i < dim_c_x; ++i)
     {
         for (std::size_t j = 0; j < dim_r_y; ++j)
@@ -40,7 +40,7 @@ int hpx_main(hpx::program_options::variables_map &vm)
 
     ////////////////////////////////////////////////////////////////
     // Computation
-    hpxfft::shared::opt fft_computer;
+    hpxfft::fft2D::shared::opt fft_computer;
     auto start_total = t.now();
     fft_computer.initialize(std::move(values_vec), plan_flag);
     auto stop_init = t.now();

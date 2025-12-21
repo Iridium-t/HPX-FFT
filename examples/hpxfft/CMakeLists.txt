@@ -25,3 +25,8 @@ target_link_libraries(hpxfft_distributed_loop PRIVATE HPXFFT::hpxfft)
 
 add_executable(hpxfft_distributed_agas distributed_agas_2d.cpp)
 target_link_libraries(hpxfft_distributed_agas PRIVATE HPXFFT::hpxfft)
+
+# 3D shared example
+add_executable(hpxfft_shared_loop_3d shared_loop_3d.cpp)
+target_link_libraries(hpxfft_shared_loop_3d PRIVATE HPXFFT::hpxfft)
+

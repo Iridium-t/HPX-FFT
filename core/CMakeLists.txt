@@ -6,6 +6,7 @@ set(SOURCE_FILES
     src/2D/shared/agas.cpp
     src/2D/distributed/loop.cpp
     src/2D/distributed/agas.cpp
+    src/3D/shared/loop.cpp
     src/util/adapter_fftw.cpp)
 
 add_library(hpxfft STATIC ${SOURCE_FILES})

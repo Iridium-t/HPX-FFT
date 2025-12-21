@@ -48,6 +48,8 @@ struct vector_3d
     const_iterator cend() const noexcept;
     iterator slice_yz(std::size_t k) noexcept;
     const_iterator slice_yz(std::size_t k) const noexcept;
+    iterator vector_z(std::size_t i, std::size_t j) noexcept;
+    const_iterator vector_z(std::size_t i, std::size_t j) const noexcept;
     // size
     std::size_t size() const noexcept;
     std::size_t n_x() const noexcept;
@@ -256,6 +258,18 @@ template <typename T>
 inline typename vector_3d<T>::const_iterator vector_3d<T>::slice_yz(std::size_t i) const noexcept
 {
     return values_ + i * n_y_ * n_z_;
+}
+
+template <typename T>
+inline typename vector_3d<T>::iterator vector_3d<T>::vector_z(std::size_t i, std::size_t j) noexcept
+{
+    return values_ + i * n_y_ * n_z_ + j * n_z_;
+}
+
+template <typename T>
+inline typename vector_3d<T>::const_iterator vector_3d<T>::vector_z(std::size_t i, std::size_t j) const noexcept
+{
+    return values_ + i * n_y_ * n_z_ + j * n_z_;
 }
 
 template <typename T>

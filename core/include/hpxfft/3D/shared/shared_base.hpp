@@ -68,8 +68,8 @@ inline void hpxfft::fft3D::shared::base::fft_1d_c2c_y_inplace(const std::size_t 
 inline void hpxfft::fft3D::shared::base::fft_1d_c2c_x_inplace(const std::size_t i, const std::size_t j)
 {
     fftw_c2c_adapter_dir_x_.execute_c2c(
-        reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)),
-        reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)));
+        reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)),
+        reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
 }
 
 inline void hpxfft::fft3D::shared::base::permute_shared_x_z_y(const std::size_t slice_x)

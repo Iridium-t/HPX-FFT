@@ -45,7 +45,95 @@ void hpxfft::fft3D::shared::loop::initialize(vector_3d values_vec, const std::st
 
 hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_par()
 {
-    return values_vec_;
+     /////////////////////////////////////////////////////////////////
+    // first dimension
+    auto start_total = t_.now();
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_x_,
+        [&](auto i)
+        {
+            for (std::size_t j = 0; j < dim_c_y_; ++j)
+            {
+                // 1D FFT r2c in z-direction
+                fft_1d_r2c_inplace(i, j);
+            }
+        });
+    auto start_first_permute = t_.now();
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_x_,
+        [&](auto i)
+        {
+            // permute from x-y-z to x-z-y
+            permute_shared_x_z_y(i);
+        });
+    // second dimension
+
+    auto start_second_fft = t_.now();
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_x_,
+        [&](auto i)
+        {
+            for (std::size_t j = 0; j < dim_c_z_; ++j)
+            {
+                // 1D FFT c2c in y-direction
+                fft_1d_c2c_y_inplace(i, j);
+            }
+    });
+    auto start_second_permute = t_.now();
+    values_vec_ = vector_3d(dim_c_y_, dim_c_z_, 2*dim_c_x_);
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_y_,
+        [&](auto i)
+        {
+            // permute from x-z-y to y-z-x
+            permute_shared_z_y_x(i);
+        });
+
+    // third dimension
+    auto start_third_fft = t_.now();
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_y_,
+        [&](auto i)
+        {
+            for (std::size_t j = 0; j < dim_c_z_; ++j)
+            {
+                // 1D FFT c2c in x-direction
+                fft_1d_c2c_x_inplace(i, j);
+            }
+        });
+    auto start_third_permute = t_.now();
+    permuted_vec_ = vector_3d(dim_c_x_, dim_c_y_, 2*dim_c_z_);
+    hpx::experimental::for_loop(
+        hpx::execution::par,
+        0,
+        dim_c_z_,
+        [&](auto i)
+        {
+            // permute from y-z-x to x-y-z
+            permute_shared_z_x_y(i);
+        });
+    auto stop_total = t_.now();
+    ////////////////////////////////////////////////////////////////
+    // additional runtimes
+    measurements_["total"] = stop_total - start_total;
+    measurements_["first_fftw"] = start_first_permute - start_total;
+    measurements_["first_permute"] = start_second_fft - start_first_permute;
+    measurements_["second_fftw"] = start_second_permute - start_second_fft;
+    measurements_["second_permute"] = start_third_fft - start_second_permute;
+    measurements_["third_fftw"] = start_third_permute - start_third_fft;
+    measurements_["third_permute"] = stop_total - start_third_permute;
+    ///////////////////////////////////////////////////////////////
+    return std::move(permuted_vec_);
 }
 
 hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()

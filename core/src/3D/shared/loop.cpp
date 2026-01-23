@@ -90,7 +90,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_par()
     hpx::experimental::for_loop(
         hpx::execution::par,
         0,
-        dim_c_y_,
+        dim_c_z_,
         [&](auto i)
         {
             // permute from x-z-y to y-z-x

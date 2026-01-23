@@ -140,9 +140,6 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
 {
     /////////////////////////////////////////////////////////////////
     // first dimension
-    std::string msg = "input Array:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(values_vec_);
     auto start_total = t_.now();
     for (std::size_t i = 0; i < dim_c_x_; ++i)
     {
@@ -152,9 +149,6 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
             fft_1d_r2c_inplace(i, j);
         }
     }
-    msg = "After first FFT:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(values_vec_);
     auto start_first_permute = t_.now();
     for (std::size_t i = 0; i < dim_c_x_; ++i)
     {
@@ -162,10 +156,6 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
         permute_shared_x_z_y(i);
     }
     // second dimension
-    msg = "After first permute:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(permuted_vec_);
-
     auto start_second_fft = t_.now();
     for (std::size_t i = 0; i < dim_c_x_; ++i)
     {
@@ -175,19 +165,13 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
             fft_1d_c2c_y_inplace(i, j);
         }
     }
-    msg = "After second FFT:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(permuted_vec_);
     auto start_second_permute = t_.now();
     values_vec_ = vector_3d(dim_c_y_, dim_c_z_, 2*dim_c_x_);
-    for (std::size_t i = 0; i < dim_c_y_; ++i)
+    for (std::size_t i = 0; i < dim_c_z_; ++i)
     {
         // permute from x-z-y to y-z-x
         permute_shared_z_y_x(i);
     }
-    msg = "After second permute:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(values_vec_);
     // third dimension
     auto start_third_fft = t_.now();
     for (std::size_t i = 0; i < dim_c_y_; ++i)
@@ -198,9 +182,6 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
             fft_1d_c2c_x_inplace(i, j);
         }
     }
-    msg = "After third FFT:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(values_vec_);
     auto start_third_permute = t_.now();
     permuted_vec_ = vector_3d(dim_c_x_, dim_c_y_, 2*dim_c_z_);
     for (std::size_t i = 0; i < dim_c_z_; ++i)
@@ -209,9 +190,6 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
         permute_shared_z_x_y(i);
     }
     auto stop_total = t_.now();
-    msg = "Final output Array:";
-    hpx::util::format_to(std::cout, "{}\n", msg) << std::flush;
-    hpxfft::util::print_vector_3d(permuted_vec_);
     ////////////////////////////////////////////////////////////////
     // additional runtimes
     measurements_["total"] = stop_total - start_total;

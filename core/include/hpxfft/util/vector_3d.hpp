@@ -55,6 +55,7 @@ struct vector_3d
     std::size_t n_x() const noexcept;
     std::size_t n_y() const noexcept;
     std::size_t n_z() const noexcept;
+    void rearrange(std::size_t new_n_x, std::size_t new_n_y, std::size_t new_n_z);
     // Non-Member Functions
     template <typename H>
     friend bool operator==(const vector_3d<H> &lhs, const vector_3d<H> &rhs);
@@ -294,6 +295,18 @@ template <typename T>
 inline std::size_t vector_3d<T>::n_z() const noexcept
 {
     return n_z_;
+}
+
+template <typename T>
+inline void vector_3d<T>::rearrange(std::size_t new_n_x, std::size_t new_n_y, std::size_t new_n_z)
+{
+    if (new_n_x * new_n_y * new_n_z != size_)
+    {
+        throw std::runtime_error("New dimensions do not match total size.");
+    }
+    n_x_ = new_n_x;
+    n_y_ = new_n_y;
+    n_z_ = new_n_z;
 }
 
 template <typename H>

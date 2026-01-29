@@ -5,6 +5,7 @@
 #include "shared_base.hpp"
 #include "../../util/vector_3d.hpp"                 // for hpxfft::util::vector_3d
 #include <hpx/timing/high_resolution_timer.hpp>     // for hpx::chrono::high_resolution_timer
+#include <hpx/parallel/algorithms/for_loop.hpp>
 
 typedef double real;
 

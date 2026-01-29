@@ -1,7 +1,4 @@
 #include "../../../include/hpxfft/3D/shared/loop.hpp"
-#include "../../../include/hpxfft/util/print_vector_3d.hpp"
-
-#include <hpx/parallel/algorithms/for_loop.hpp>
 
 void hpxfft::fft3D::shared::loop::initialize(vector_3d values_vec, const std::string PLAN_FLAG)
 {
@@ -116,7 +113,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_par()
     hpx::experimental::for_loop(
         hpx::execution::par,
         0,
-        dim_c_z_,
+        dim_c_y_,
         [&](auto i)
         {
             // permute from y-z-x to x-y-z
@@ -184,7 +181,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::loop::fft_3d_r2c_seq()
     }
     auto start_third_permute = t_.now();
     permuted_vec_ = vector_3d(dim_c_x_, dim_c_y_, 2*dim_c_z_);
-    for (std::size_t i = 0; i < dim_c_z_; ++i)
+    for (std::size_t i = 0; i < dim_c_y_; ++i)
     {
         // permute from y-z-x to x-y-z
         permute_shared_z_x_y(i);

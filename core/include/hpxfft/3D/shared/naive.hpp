@@ -27,6 +27,14 @@ struct naive : public base
     void write_plans_to_file(std::string file_path);
 
   private:
+    // static wrappers
+    static void fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j);
+    static void fft_1d_c2c_y_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j);
+    static void fft_1d_c2c_x_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j);
+    static void permute_shared_x_z_y_wrapper(naive *th, const std::size_t slice_x);
+    static void permute_shared_z_y_x_wrapper(naive *th, const std::size_t slice_y);
+    static void permute_shared_z_x_y_wrapper(naive *th, const std::size_t slice_x);
+
     // future vectors
     vector_future fft_z_r2c_futures_;
     vector_future permute_first_futures_;

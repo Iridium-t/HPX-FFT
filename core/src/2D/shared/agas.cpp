@@ -1,10 +1,10 @@
-#include "../../include/hpxfft/shared/agas.hpp"
+#include "../../../include/hpxfft/2D/shared/agas.hpp"
 
 #include <hpx/modules/components.hpp>
 
 // HPX_REGISTER_COMPONENT() exposes the component creation
 // through hpx::new_<>().
-typedef hpx::components::component<hpxfft::shared::agas_server> agas_server_type;
+typedef hpx::components::component<hpxfft::fft2D::shared::agas_server> agas_server_type;
 HPX_REGISTER_COMPONENT(agas_server_type, agas_server);
 
 // HPX_REGISTER_ACTION() exposes the component member function
@@ -12,19 +12,19 @@ HPX_REGISTER_ACTION(fft_2d_r2c_action);
 HPX_REGISTER_ACTION(initialize_action);
 
 // FFT backend
-void hpxfft::shared::agas_server::fft_1d_r2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::agas_server::fft_1d_r2c_inplace(const std::size_t i)
 {
     fft_r2c_adapter_.execute(values_vec_.row(i), reinterpret_cast<fftw_complex *>(values_vec_.row(i)));
 }
 
-void hpxfft::shared::agas_server::fft_1d_c2c_inplace(const std::size_t i)
+void hpxfft::fft2D::shared::agas_server::fft_1d_c2c_inplace(const std::size_t i)
 {
     fft_c2c_adapter_.execute(reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)),
                              reinterpret_cast<fftw_complex *>(trans_values_vec_.row(i)));
 }
 
 // transpose with write running index
-void hpxfft::shared::agas_server::transpose_shared_y_to_x(const std::size_t index)
+void hpxfft::fft2D::shared::agas_server::transpose_shared_y_to_x(const std::size_t index)
 {
     for (std::size_t index_trans = 0; index_trans < dim_c_x_; ++index_trans)
     {
@@ -34,7 +34,7 @@ void hpxfft::shared::agas_server::transpose_shared_y_to_x(const std::size_t inde
 }
 
 // transpose with read running index
-void hpxfft::shared::agas_server::transpose_shared_x_to_y(const std::size_t index_trans)
+void hpxfft::fft2D::shared::agas_server::transpose_shared_x_to_y(const std::size_t index_trans)
 {
     for (std::size_t index = 0; index < dim_c_x_; ++index)
     {
@@ -44,7 +44,7 @@ void hpxfft::shared::agas_server::transpose_shared_x_to_y(const std::size_t inde
 }
 
 // 2D FFT algorithm
-hpxfft::shared::vector_2d hpxfft::shared::agas_server::fft_2d_r2c()
+hpxfft::fft2D::shared::vector_2d hpxfft::fft2D::shared::agas_server::fft_2d_r2c()
 {
     // first dimension
     for (std::size_t i = 0; i < dim_c_x_; ++i)
@@ -86,7 +86,7 @@ hpxfft::shared::vector_2d hpxfft::shared::agas_server::fft_2d_r2c()
 }
 
 // initialization
-void hpxfft::shared::agas_server::initialize(hpxfft::shared::vector_2d values_vec, const std::string PLAN_FLAG)
+void hpxfft::fft2D::shared::agas_server::initialize(hpxfft::fft2D::shared::vector_2d values_vec, const std::string PLAN_FLAG)
 {
     // move data into own data structure
     values_vec_ = std::move(values_vec);
@@ -95,7 +95,7 @@ void hpxfft::shared::agas_server::initialize(hpxfft::shared::vector_2d values_ve
     dim_c_y_ = values_vec_.n_col() / 2;
     dim_r_y_ = 2 * dim_c_y_ - 2;
     // resize transposed data structure
-    trans_values_vec_ = std::move(hpxfft::shared::vector_2d(dim_c_y_, 2 * dim_c_x_));
+    trans_values_vec_ = std::move(hpxfft::fft2D::shared::vector_2d(dim_c_y_, 2 * dim_c_x_));
     // create FFTW plans
     // r2c in y-direction
     fft_r2c_adapter_ = hpxfft::util::fftw_adapter::r2c_1d();

@@ -1,10 +1,10 @@
-#include "../../core/include/hpxfft/2D/shared/loop.hpp"
-#include "../../core/include/hpxfft/util/print_vector_2d.hpp"
+#include "../../core/include/hpxfft/3D/shared/loop.hpp"
+#include "../../core/include/hpxfft/util/print_vector_3d.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <hpx/hpx_init.hpp>
 
-using hpxfft::fft2D::shared::loop;
+using hpxfft::fft3D::shared::loop;
 using real = double;
 
 int entrypoint_test1(int argc, char *argv[])
@@ -12,26 +12,30 @@ int entrypoint_test1(int argc, char *argv[])
     // Parameters and Data structures
     const std::size_t num_localities = hpx::get_num_localities(hpx::launch::sync);
     // choose dimensions consistent with the implementation:
-    const std::size_t n_row = 4;
-    const std::size_t n_col = 6;
-    const std::size_t n_x_local = n_row / num_localities;
-    hpxfft::fft2D::shared::vector_2d values_vec(n_row, n_col, 0.0);
+    const std::size_t n_x = 3;
+    const std::size_t n_y = 5;
+    const std::size_t n_z_r = 4;
+    const std::size_t n_z_c = n_z_r/2 + 1;
+    hpxfft::fft3D::shared::vector_3d values_vec(n_x, n_y, 2*n_z_c, 0.0);
 
-    for (std::size_t i = 0; i < n_row; ++i)
+    for (std::size_t i = 0; i < n_x; ++i)
     {
-        values_vec(i, 0) = 1.0;
-        values_vec(i, 1) = 2.0;
-        values_vec(i, 2) = 3.0;
-        values_vec(i, 3) = 4.0;
+        for(std::size_t j = 0; j < n_y; ++j)
+        {
+            for(std::size_t k = 0; k < n_z_r; ++k)
+            {
+                values_vec(i, j, k) = k;
+            }
+        }
     }
 
     // expected output
-    hpxfft::fft2D::shared::vector_2d expected_output(n_x_local, n_col, 0.0);
+    hpxfft::fft3D::shared::vector_3d expected_output(n_x, n_y, 2*n_z_c, 0.0);
 
-    expected_output(0, 0) = 40.0;
-    expected_output(0, 2) = -8.0;
-    expected_output(0, 3) = 8.0;
-    expected_output(0, 4) = -8.0;
+    expected_output(0, 0, 0) = 90.0;
+    expected_output(0, 0, 2) = -30.0;
+    expected_output(0, 0, 3) = 30.0;
+    expected_output(0, 0, 4) = -30.0;
 
     // Computation
     /*
@@ -43,10 +47,10 @@ int entrypoint_test1(int argc, char *argv[])
     REQUIRE(total >= 0.0);
     REQUIRE(out1 == expected_output);
     */
-    hpxfft::fft2D::shared::loop fft2;
+    hpxfft::fft3D::shared::loop fft2;
     std::string plan_flag = "estimate";
     fft2.initialize(std::move(values_vec), plan_flag);
-    hpxfft::fft2D::shared::vector_2d out2 = fft2.fft_2d_r2c_par();
+    hpxfft::fft3D::shared::vector_3d out2 = fft2.fft_3d_r2c_par();
     auto total = fft2.get_measurement(std::string("total"));
     auto flops = fft2.get_measurement(std::string("plan_flops"));
     REQUIRE(total >= 0.0);
@@ -55,7 +59,7 @@ int entrypoint_test1(int argc, char *argv[])
     return hpx::finalize();
 }
 
-TEST_CASE("shared loop fft 2d r2c seq and par runs and produces correct output", "[shared loop][fft]")
+TEST_CASE("shared loop fft 3d r2c par runs and produces correct output", "[shared loop][3D][fft]")
 {
     hpx::init(&entrypoint_test1, 0, nullptr);
 }

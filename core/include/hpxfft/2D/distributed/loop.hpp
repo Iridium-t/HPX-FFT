@@ -2,15 +2,15 @@
 #ifndef hpxfft_distributed_loop_H_INCLUDED
 #define hpxfft_distributed_loop_H_INCLUDED
 
-#include "../util/adapter_fftw.hpp"
-#include "../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
+#include "../../util/adapter_fftw.hpp"
+#include "../../util/vector_2d.hpp"  // for hpxfft::util::vector_2d
 #include <hpx/future.hpp>
 #include <hpx/modules/collectives.hpp>
 #include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
 
 typedef double real;
 
-namespace hpxfft::distributed
+namespace hpxfft::fft2D::distributed
 {
 using vector_2d = hpxfft::util::vector_2d<real>;
 
@@ -78,5 +78,5 @@ struct loop
     std::vector<const char *> basenames_;
     std::vector<hpx::collectives::communicator> communicators_;
 };
-}  // namespace hpxfft::distributed
+}  // namespace hpxfft::fft2D::distributed
 #endif  // hpxfft_distributed_loop_H_INCLUDED

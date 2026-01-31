@@ -5,7 +5,7 @@
 #include "agas_server.hpp"
 #include <hpx/hpx.hpp>
 
-namespace hpxfft::distributed
+namespace hpxfft::fft2D::distributed
 {
 ///////////////////////////////////////////////////////////////////////////////
 // This is a client side member function. It can now be implemented as the
@@ -27,5 +27,5 @@ struct agas : hpx::components::client_base<agas, agas_server>
 
     ~agas() = default;
 };
-}  // namespace hpxfft::distributed
+}  // namespace hpxfft::fft2D::distributed
 #endif  // hpxfft_distributed_agas_H_INCLUDED

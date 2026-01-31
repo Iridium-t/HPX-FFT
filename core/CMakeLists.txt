@@ -1,11 +1,14 @@
 set(SOURCE_FILES
-    src/shared/loop.cpp
-    src/shared/sync.cpp
-    src/shared/opt.cpp
-    src/shared/naive.cpp
-    src/shared/agas.cpp
-    src/distributed/loop.cpp
-    src/distributed/agas.cpp
+    src/2D/shared/loop.cpp
+    src/2D/shared/sync.cpp
+    src/2D/shared/opt.cpp
+    src/2D/shared/naive.cpp
+    src/2D/shared/agas.cpp
+    src/2D/distributed/loop.cpp
+    src/2D/distributed/agas.cpp
+    src/3D/shared/loop.cpp
+    src/3D/shared/naive.cpp
+    src/3D/shared/sync.cpp
     src/util/adapter_fftw.cpp
     src/util/create_dir.cpp)
 

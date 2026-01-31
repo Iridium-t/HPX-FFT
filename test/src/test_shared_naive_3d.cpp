@@ -50,7 +50,7 @@ int entrypoint_test1(int argc, char *argv[])
     return hpx::finalize();
 }
 
-TEST_CASE("shared loop fft 3d r2c par runs and produces correct output", "[shared loop][3D][fft]")
+TEST_CASE("shared naive fft 3d r2c runs and produces correct output", "[shared naive][3D][fft]")
 {
     hpx::init(&entrypoint_test1, 0, nullptr);
 }

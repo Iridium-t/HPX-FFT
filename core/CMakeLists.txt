@@ -9,7 +9,8 @@ set(SOURCE_FILES
     src/3D/shared/loop.cpp
     src/3D/shared/naive.cpp
     src/3D/shared/sync.cpp
-    src/util/adapter_fftw.cpp)
+    src/util/adapter_fftw.cpp
+    src/util/create_dir.cpp)
 
 add_library(hpxfft STATIC ${SOURCE_FILES})
 

@@ -19,6 +19,8 @@ struct base
 
     real get_measurement(std::string name);
 
+    ~base() { hpxfft::util::fftw_adapter::cleanup(); }
+
   protected:
     // FFT backend
     void fft_1d_r2c_inplace(const std::size_t i, const std::size_t j);
@@ -33,12 +35,10 @@ struct base
   protected:
     // prarameters
     std::size_t dim_r_z_, dim_c_z_, dim_c_y_, dim_c_x_;
-    // FFTW plans
-    hpxfft::util::fftw_plan_flag PLAN_FLAG_;
     // IMPORTANT: declare r2c adapter before c2c so r2c destructor is called after c2c
-    hpxfft::util::fftw_adapter_r2c fftw_r2c_adapter_dir_z_;
-    hpxfft::util::fftw_adapter_c2c fftw_c2c_adapter_dir_y_;
-    hpxfft::util::fftw_adapter_c2c fftw_c2c_adapter_dir_x_;
+    hpxfft::util::fftw_adapter::r2c_1d fftw_r2c_adapter_dir_z_;
+    hpxfft::util::fftw_adapter::c2c_1d fftw_c2c_adapter_dir_y_;
+    hpxfft::util::fftw_adapter::c2c_1d fftw_c2c_adapter_dir_x_;
     // value vectors
     vector_3d values_vec_;
     vector_3d permuted_vec_;
@@ -54,20 +54,20 @@ inline real hpxfft::fft3D::shared::base::get_measurement(std::string name)
 
 inline void hpxfft::fft3D::shared::base::fft_1d_r2c_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_r2c_adapter_dir_z_.execute_r2c(
+    fftw_r2c_adapter_dir_z_.execute(
         values_vec_.vector_z(i, j), reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
 }
 
 inline void hpxfft::fft3D::shared::base::fft_1d_c2c_y_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_c2c_adapter_dir_y_.execute_c2c(
+    fftw_c2c_adapter_dir_y_.execute(
         reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)),
         reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)));
 }
 
 inline void hpxfft::fft3D::shared::base::fft_1d_c2c_x_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_c2c_adapter_dir_x_.execute_c2c(
+    fftw_c2c_adapter_dir_x_.execute(
         reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)),
         reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
 }

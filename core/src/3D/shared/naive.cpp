@@ -44,7 +44,7 @@ void hpxfft::fft3D::shared::naive::initialize(vector_3d values_vec, const std::s
     fft_y_c2c_futures_.resize(dim_c_x_*dim_c_z_);
     permute_second_futures_.resize(dim_c_z_);
     fft_x_c2c_futures_.resize(dim_c_y_*dim_c_z_);
-    permute_third_futures_.resize(dim_c_z_);
+    permute_third_futures_.resize(dim_c_y_);
     }
 
 // wrapper for fft_1d_r2c_inplace to use with hpx::async
@@ -92,7 +92,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
         }
     }
     hpx::shared_future<vector_future> all_fft_z_r2c_futures = hpx::when_all(fft_z_r2c_futures_);
-
+    
     /////////////////////////////////////////////////////////////////
     // Permute (X, Y, Z) -> (X, Z, Y)
     for (std::size_t slice_x = 0; slice_x < dim_c_x_; ++slice_x)
@@ -105,7 +105,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
             });
     }
     hpx::shared_future<vector_future> all_permute_first_futures = hpx::when_all(permute_first_futures_);
-
+    
     /////////////////////////////////////////////////////////////////
     // Second dimension (Y)
     for (std::size_t i = 0; i < dim_c_x_; ++i)
@@ -121,10 +121,12 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
         }
     }
     hpx::shared_future<vector_future> all_fft_y_c2c_futures = hpx::when_all(fft_y_c2c_futures_);
+    all_permute_first_futures.get();
     values_vec_.rearrange(dim_c_y_, dim_c_z_, 2*dim_c_x_);
+    
     /////////////////////////////////////////////////////////////////
     // Permute (X, Z, Y) -> (Y, Z, X)
-    for (std::size_t slice_y = 0; slice_y < dim_c_y_; ++slice_y)
+    for (std::size_t slice_y = 0; slice_y < dim_c_z_; ++slice_y)
     {
         permute_second_futures_[slice_y] = all_fft_y_c2c_futures.then(
             [=, this](hpx::shared_future<vector_future> r)
@@ -134,14 +136,14 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
             });
     }
     hpx::shared_future<vector_future> all_permute_second_futures = hpx::when_all(permute_second_futures_);
-
+    
     /////////////////////////////////////////////////////////////////
     // Third dimension (X)
-    for (std::size_t i = 0; i < dim_c_z_; ++i)
+    for (std::size_t i = 0; i < dim_c_y_; ++i)
     {
-        for (std::size_t j = 0; j < dim_c_y_; ++j)
+        for (std::size_t j = 0; j < dim_c_z_; ++j)
         {
-            fft_x_c2c_futures_[i*dim_c_y_ + j] = all_permute_second_futures.then(
+            fft_x_c2c_futures_[i*dim_c_z_ + j] = all_permute_second_futures.then(
                 [=, this](hpx::shared_future<vector_future> r)
                 {
                     r.get();
@@ -150,7 +152,9 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
         }
     }
     hpx::shared_future<vector_future> all_fft_x_c2c_futures = hpx::when_all(fft_x_c2c_futures_);
+    all_permute_second_futures.get();
     permuted_vec_.rearrange(dim_c_x_, dim_c_y_, 2*dim_c_z_);
+    
     /////////////////////////////////////////////////////////////////
     // Permute (Y, Z, X) -> (X, Y, Z)
     for (std::size_t slice_x = 0; slice_x < dim_c_y_; ++slice_x)
@@ -163,6 +167,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
             });
     }
     hpx::wait_all(permute_third_futures_);
+    
     auto stop_total = t_.now();
     ////////////////////////////////////////////////////////////////
     // additional runtimes

@@ -32,3 +32,6 @@ target_link_libraries(hpxfft_shared_loop_3d PRIVATE HPXFFT::hpxfft)
 
 add_executable(hpxfft_shared_naive_3d shared_naive_3d.cpp)
 target_link_libraries(hpxfft_shared_naive_3d PRIVATE HPXFFT::hpxfft)
+
+add_executable(hpxfft_shared_sync_3d shared_sync_3d.cpp)
+target_link_libraries(hpxfft_shared_sync_3d PRIVATE HPXFFT::hpxfft)

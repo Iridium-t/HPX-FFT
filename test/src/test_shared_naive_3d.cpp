@@ -15,14 +15,14 @@ int entrypoint_test1(int argc, char *argv[])
     const std::size_t n_x = 3;
     const std::size_t n_y = 5;
     const std::size_t n_z_r = 4;
-    const std::size_t n_z_c = n_z_r/2 + 1;
-    hpxfft::fft3D::shared::vector_3d values_vec(n_x, n_y, 2*n_z_c, 0.0);
+    const std::size_t n_z_c = n_z_r / 2 + 1;
+    hpxfft::fft3D::shared::vector_3d values_vec(n_x, n_y, 2 * n_z_c, 0.0);
 
     for (std::size_t i = 0; i < n_x; ++i)
     {
-        for(std::size_t j = 0; j < n_y; ++j)
+        for (std::size_t j = 0; j < n_y; ++j)
         {
-            for(std::size_t k = 0; k < n_z_r; ++k)
+            for (std::size_t k = 0; k < n_z_r; ++k)
             {
                 values_vec(i, j, k) = k;
             }
@@ -30,7 +30,7 @@ int entrypoint_test1(int argc, char *argv[])
     }
 
     // expected output
-    hpxfft::fft3D::shared::vector_3d expected_output(n_x, n_y, 2*n_z_c, 0.0);
+    hpxfft::fft3D::shared::vector_3d expected_output(n_x, n_y, 2 * n_z_c, 0.0);
 
     expected_output(0, 0, 0) = 90.0;
     expected_output(0, 0, 2) = -30.0;

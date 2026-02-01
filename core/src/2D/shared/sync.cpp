@@ -33,9 +33,15 @@ void hpxfft::fft2D::shared::sync::transpose_shared_x_to_y(const std::size_t inde
 }
 
 // wrappers
-void hpxfft::fft2D::shared::sync::fft_1d_r2c_inplace_wrapper(sync *th, const std::size_t i) { th->fft_1d_r2c_inplace(i); }
+void hpxfft::fft2D::shared::sync::fft_1d_r2c_inplace_wrapper(sync *th, const std::size_t i)
+{
+    th->fft_1d_r2c_inplace(i);
+}
 
-void hpxfft::fft2D::shared::sync::fft_1d_c2c_inplace_wrapper(sync *th, const std::size_t i) { th->fft_1d_c2c_inplace(i); }
+void hpxfft::fft2D::shared::sync::fft_1d_c2c_inplace_wrapper(sync *th, const std::size_t i)
+{
+    th->fft_1d_c2c_inplace(i);
+}
 
 void hpxfft::fft2D::shared::sync::transpose_shared_y_to_x_wrapper(sync *th, const std::size_t index)
 {

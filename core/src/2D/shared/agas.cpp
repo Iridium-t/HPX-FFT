@@ -86,7 +86,8 @@ hpxfft::fft2D::shared::vector_2d hpxfft::fft2D::shared::agas_server::fft_2d_r2c(
 }
 
 // initialization
-void hpxfft::fft2D::shared::agas_server::initialize(hpxfft::fft2D::shared::vector_2d values_vec, const std::string PLAN_FLAG)
+void hpxfft::fft2D::shared::agas_server::initialize(hpxfft::fft2D::shared::vector_2d values_vec,
+                                                    const std::string PLAN_FLAG)
 {
     // move data into own data structure
     values_vec_ = std::move(values_vec);

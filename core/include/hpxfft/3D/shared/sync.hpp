@@ -2,10 +2,10 @@
 #ifndef hpxfft_shared_sync_3D_H_INCLUDED
 #define hpxfft_shared_sync_3D_H_INCLUDED
 
+#include "../../util/vector_3d.hpp"  // for hpxfft::util::vector_3d
 #include "shared_base.hpp"
-#include "../../util/vector_3d.hpp"             // for hpxfft::util::vector_3d
-#include <hpx/timing/high_resolution_timer.hpp> // for hpx::chrono::high_resolution_timer
 #include <hpx/future.hpp>
+#include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
 
 typedef double real;
 
@@ -43,5 +43,5 @@ struct sync : public base
     vector_future fft_x_c2c_futures_;
     vector_future permute_third_futures_;
 };
-} // namespace hpxfft::fft3D::shared
+}  // namespace hpxfft::fft3D::shared
 #endif  // hpxfft_shared_sync_3D_H_INCLUDED

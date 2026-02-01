@@ -43,5 +43,5 @@ inline void print_vector_3d(const vector_3d<real> &input)
     }
     hpx::util::format_to(std::cout, msg) << std::flush;
 }
-} // namespace hpxfft::util
-#endif // print_vector_3d_H_INCLUDED
+}  // namespace hpxfft::util
+#endif  // print_vector_3d_H_INCLUDED

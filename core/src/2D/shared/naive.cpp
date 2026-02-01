@@ -32,9 +32,15 @@ void hpxfft::fft2D::shared::naive::transpose_shared_x_to_y(const std::size_t ind
 }
 
 // wrappers
-void hpxfft::fft2D::shared::naive::fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_r2c_inplace(i); }
+void hpxfft::fft2D::shared::naive::fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i)
+{
+    th->fft_1d_r2c_inplace(i);
+}
 
-void hpxfft::fft2D::shared::naive::fft_1d_c2c_inplace_wrapper(naive *th, const std::size_t i) { th->fft_1d_c2c_inplace(i); }
+void hpxfft::fft2D::shared::naive::fft_1d_c2c_inplace_wrapper(naive *th, const std::size_t i)
+{
+    th->fft_1d_c2c_inplace(i);
+}
 
 void hpxfft::fft2D::shared::naive::transpose_shared_y_to_x_wrapper(naive *th, const std::size_t index_trans)
 {

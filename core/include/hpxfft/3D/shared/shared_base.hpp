@@ -3,8 +3,8 @@
 #define hpxfft_shared_base_3D_H_INCLUDED
 
 #include "../../util/adapter_fftw.hpp"
-#include "../../util/vector_3d.hpp"                 // for hpxfft::util::vector_3d
-#include <hpx/timing/high_resolution_timer.hpp>     // for hpx::chrono::high_resolution_timer
+#include "../../util/vector_3d.hpp"              // for hpxfft::util::vector_3d
+#include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
 
 typedef double real;
 
@@ -47,10 +47,7 @@ struct base
     std::map<std::string, real> measurements_;
 };
 
-inline real hpxfft::fft3D::shared::base::get_measurement(std::string name)
-{
-    return measurements_[name];
-}
+inline real hpxfft::fft3D::shared::base::get_measurement(std::string name) { return measurements_[name]; }
 
 inline void hpxfft::fft3D::shared::base::fft_1d_r2c_inplace(const std::size_t i, const std::size_t j)
 {
@@ -60,16 +57,14 @@ inline void hpxfft::fft3D::shared::base::fft_1d_r2c_inplace(const std::size_t i,
 
 inline void hpxfft::fft3D::shared::base::fft_1d_c2c_y_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_c2c_adapter_dir_y_.execute(
-        reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)),
-        reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)));
+    fftw_c2c_adapter_dir_y_.execute(reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)),
+                                    reinterpret_cast<fftw_complex *>(permuted_vec_.vector_z(i, j)));
 }
 
 inline void hpxfft::fft3D::shared::base::fft_1d_c2c_x_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_c2c_adapter_dir_x_.execute(
-        reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)),
-        reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
+    fftw_c2c_adapter_dir_x_.execute(reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)),
+                                    reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
 }
 
 inline void hpxfft::fft3D::shared::base::permute_shared_x_z_y(const std::size_t slice_x)
@@ -78,7 +73,7 @@ inline void hpxfft::fft3D::shared::base::permute_shared_x_z_y(const std::size_t 
     const std::size_t n_y = values_vec_.n_y();
     const std::size_t n_z = values_vec_.n_z();
     const std::size_t n_z_c = n_z / 2;
-    
+
     for (std::size_t index_y = 0; index_y < n_y; ++index_y)
     {
         for (std::size_t index_z = 0; index_z < n_z_c; ++index_z)
@@ -122,5 +117,5 @@ inline void hpxfft::fft3D::shared::base::permute_shared_z_x_y(const std::size_t 
         }
     }
 }
-} // namespace hpxfft::fft3D::shared
+}  // namespace hpxfft::fft3D::shared
 #endif  // hpxfft_shared_3D_H_INCLUDED

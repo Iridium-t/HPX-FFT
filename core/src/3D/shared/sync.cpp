@@ -9,23 +9,23 @@ void hpxfft::fft3D::shared::sync::initialize(vector_3d values_vec, const std::st
     dim_r_z_ = 2 * dim_c_z_ - 2;
     //resize transposed data structure
     permuted_vec_ = vector_3d(dim_c_x_, dim_c_z_, 2*dim_c_y_);
-    PLAN_FLAG_ = hpxfft::util::string_to_fftw_plan_flag(PLAN_FLAG);
     auto start_plan = t_.now();
-   // initialize FFTW adapters
-    fftw_r2c_adapter_dir_z_ = hpxfft::util::fftw_adapter_r2c();
-    fftw_r2c_adapter_dir_z_.initialize(dim_r_z_, PLAN_FLAG_,
-                                      permuted_vec_.slice_yz(0),
-                                      reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)));
-    fftw_c2c_adapter_dir_y_ = hpxfft::util::fftw_adapter_c2c();
-    fftw_c2c_adapter_dir_y_.initialize(dim_c_y_, PLAN_FLAG_,
-                                      reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
-                                      reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
-                                      hpxfft::util::fftw_direction::forward);
-    fftw_c2c_adapter_dir_x_ = hpxfft::util::fftw_adapter_c2c();
-    fftw_c2c_adapter_dir_x_.initialize(dim_c_x_, PLAN_FLAG_,
-                                      reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
-                                      reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
-                                      hpxfft::util::fftw_direction::forward);
+    // initialize FFTW adapters
+    fftw_r2c_adapter_dir_z_ = hpxfft::util::fftw_adapter::r2c_1d();
+    fftw_r2c_adapter_dir_z_.plan(
+        dim_r_z_, PLAN_FLAG, permuted_vec_.slice_yz(0), reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)));
+    fftw_c2c_adapter_dir_y_ = hpxfft::util::fftw_adapter::c2c_1d();
+    fftw_c2c_adapter_dir_y_.plan(dim_c_y_, 
+                                 PLAN_FLAG,
+                                 reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
+                                 reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
+                                 hpxfft::util::fftw_adapter::direction::forward);
+    fftw_c2c_adapter_dir_x_ = hpxfft::util::fftw_adapter::c2c_1d();
+    fftw_c2c_adapter_dir_x_.plan(dim_c_x_, 
+                                 PLAN_FLAG,
+                                 reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
+                                 reinterpret_cast<fftw_complex *>(permuted_vec_.slice_yz(0)),
+                                 hpxfft::util::fftw_adapter::direction::forward);
     auto stop_plan = t_.now();
     measurements_["plan"] = stop_plan - start_plan;
     // compute overall plan flops
@@ -169,15 +169,15 @@ void hpxfft::fft3D::shared::sync::write_plans_to_file(std::string file_path)
     }
     // Write first plan
     fprintf(file_name, "FFTW r2c 1D plan:\n");
-    fftw_r2c_adapter_dir_z_.fprintf_plan(file_name);
+    fftw_r2c_adapter_dir_z_.print_plan(file_name);
     fprintf(file_name, "\n");
     // Write second plan
     fprintf(file_name, "FFTW c2c 1D plan direction y:\n");
-    fftw_c2c_adapter_dir_y_.fprintf_plan(file_name);
+    fftw_c2c_adapter_dir_y_.print_plan(file_name);
     fprintf(file_name, "\n");
     // Write third plan
     fprintf(file_name, "FFTW c2c 1D plan direction x:\n");
-    fftw_c2c_adapter_dir_x_.fprintf_plan(file_name);
+    fftw_c2c_adapter_dir_x_.print_plan(file_name);
     fprintf(file_name, "\n\n");
     // Close file
     fclose(file_name);

@@ -31,8 +31,8 @@ void hpxfft::fft3D::distributed::loop::slap::initialize(
     permuted_values_prep_.resize(num_localities_);
     for (std::size_t i = 0; i < num_localities_; ++i)
     {
-        permuted_values_prep_[i].resize(n_x_local_ * n_z_local_ * dim_c_y_part_);
-        values_prep_[i].resize(n_y_local_ * n_z_local_ * dim_c_x_part_);
+        permuted_values_prep_[i] = vector_3d(n_x_local_, dim_c_z_, 2 * n_y_local_);
+        values_prep_[i] = vector_3d(n_y_local_, dim_c_z_, 2 * n_x_local_);
     }
     // create FFTW plans
     // r2c in z-direction
@@ -159,37 +159,30 @@ void hpxfft::fft3D::distributed::loop::slap::permute_distributed_x_z_y(const std
 //permute data after communication 
 void hpxfft::fft3D::distributed::loop::slap::permute_distributed_z_y_x(const std::size_t slice_y, const std::size_t i)
 {
-    const std::size_t n_x = values_vec_.n_x();
-    const std::size_t n_y = values_vec_.n_y();
-    const std::size_t n_z = values_vec_.n_z();
-    const std::size_t z_part = n_z/num_localities_;
-    std::size_t index_in;
-    std::size_t index_out_x;
-    std::size_t index_out_z;
-    const std::size_t offset_out_z = i * z_part;
-    const std::size_t offset_in = n_y * 2;
-    const std::size_t dim_z_in = n_x;
-    const std::size_t dim_x_in = n_z/num_localities_;
-
-    for(std::size_t u = 0; u < dim_x_in; ++u)
+    const std::size_t part = values_vec_.n_z()/num_localities_;
+    const std::size_t offset = part * i;
+    for(std::size_t index_z = 0; index_z < values_vec_.n_x(); index_z++)
     {
-        for(std::size_t v = 0; v < dim_z_in/2; v++)
+        for(std::size_t index_x = 0; index_x < part/2; index_x++)
         {
-            index_in = slice_y * dim_z_in + u * dim_z_in *  n_y + v * 2;
-            index_out_x = v;
-            index_out_z = offset_out_z + 2 * u;
-            values_vec(index_out_x, slice_y, index_out_z) = communication_vec_[i][index_in];
-            values_vec(index_out_x, slice_y, index_out_z + 1) = communication_vec_[i][index_in+1];
+            values_vec_(index_z, slice_y, offset + 2 * index_x) =  communication_vec_[i](index_x, slice_y, 2 * index_z);
+            values_vec_(index_z, slice_y, offset + 2 * index_x  + 1) =  communication_vec_[i](index_x, slice_y, 2 * index_z + 1); 
         }
     }
-
 }
 
 void hpxfft::fft3D::distributed::loop::slap::permute_distributed_z_x_y(const std::site_t slice_x, vonst std::size_t i)
 {
-    const std::size_t n_x = permuted_vec_.n_x();
-    const std::size_t n_y = permuted_vec_.n_y();
-    const std::size_t n_z = permuted_vec_.n_z();
+    const std::size_t part = permuted_vec_.n_y()/num_localities_;
+    const std::size_t offset = part * i;
+    for(std::size_t index_z = 0; index_z < permuted_vec_.n_x(); index_z++)
+    {
+        for(std::size_t index_y = 0; index_y < permuted_vec_.n_z()/2; index_z++)
+        {
+            permuted_vec_(index_z,offset + slice_x, 2 * index_y) = communication_vec_[i](slice_x, index_y, 2 * index_z);
+            permuted_vec_(index_z,offset + slice_x, 2 * index_y + 1) = communication_vec_[i](slice_x, index_y, 2 * index_z + 1);
+        }
+    }
     
 }
 
@@ -198,9 +191,10 @@ void hpxfft::fft3D::distributed::loop::slap::split_vec(const std::size_t x, cons
     std::size_t part = values_vec_.n_z()/num_localities_;
     for(std::size_t j = 0; j < num_localities_; j++){
         for(std::size_t y = 0; y < values_vec_.n_y(); ++y){
-            std::copy(values_vec_.vector_z(x,y) + j * part,
-                      values_vec_.vector_z(x,y) + (j+1) * part,
-                      values_prep_[j].begin() + (x * values_vec_.n_y() + y) * part);
+            for (std::size_t z = 0; z < part; z++)
+                {
+                    values_prep_[j](x,y,z) = values_vec(x,y,z+part*j);
+                }
         }
     }
 }
@@ -210,9 +204,10 @@ void hpxfft::fft3D::distributed::loop::slap::split_permuted_vec(const std::size_
     std::size_t part = permuted_vec_.n_z()/num_localities_;
     for(std::size_t j = 0; j < num_localities_; j++){
         for(std::size_t y = 0; y < permuted_vec_.n_y(); ++y){
-            std::copy(permuted_vec_.vector_z(x,y) + j * part,
-                      permuted_vec_.vector_z(x,y) + (j+1) * part,
-                      permuted_values_prep_[j].begin() + (x * permuted_vec_.n_y() + y) * part);
+            for (std::size_t z = 0; z < part; z++)
+                {
+                    permuted_values_prep_[j](x,y,z) = permuted_vec_(x,y,z+part*j);
+                }
         }
     }
 }
@@ -224,6 +219,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
     // first dimension
     auto start_total = t_.now();
     // first loop over x
+    /*
     hpx::experimental::for_loop(
         hpx::execution::par,
         0,
@@ -237,6 +233,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
                 fft_1d_r2c_inplace(i,j);
             }
         });
+    */
     // first permute and second fft can all happen locally
     auto start_first_permute = t_.now();
     hpx::experimental::for_loop(
@@ -252,6 +249,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
     // dimesions are now x z y
     auto start_second_fft = t_.now();
     // first loop over x
+    /*
     hpx::experimental::for_loop(
         hpx::execution::par,
         0,
@@ -265,6 +263,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
                 fft_1d_c2c_y_inplace(i,j);
             }
         });
+    */
     auto start_first_split = t_.now();
     // splitting along the third dimesion (y)
     hpx::experimental::for_loop(
@@ -324,6 +323,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
     // third fft
     auto start_third_fft = t_.now();
     // for every (local) y
+    /*
     hpx::experimental::for_loop(
         hpx::execution::par,
         0,
@@ -334,9 +334,10 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::slap::ff
             for(std::size_t j; j<dim_c_z_; ++j)
             {
                 // 1D FFT c2c in x-direction
-                fft_1d_c2c_inplace(i);
+                fft_1d_c2c_x_inplace(i);
             }
         });
+    */
     auto start_second_split = t_.now();
     hpx::experimental::for_loop(
         hpx::execution::par,

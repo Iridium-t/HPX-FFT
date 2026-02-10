@@ -15,7 +15,7 @@ using vector_3d = hpxfft::util::vector_3d<real>;
 struct base
 {
     typedef std::vector<hpx::future<void>> vector_future;
-    typedef std::vector<std::vector<real>> vector_comm;
+    typedef std::vector<vector_3d> vector_comm;
 
   public:
     base() = default;

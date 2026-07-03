@@ -35,3 +35,10 @@ target_link_libraries(hpxfft_shared_naive_3d PRIVATE HPXFFT::hpxfft)
 
 add_executable(hpxfft_shared_sync_3d shared_sync_3d.cpp)
 target_link_libraries(hpxfft_shared_sync_3d PRIVATE HPXFFT::hpxfft)
+
+# 3D distributed examples
+add_executable(hpxfft_distributed_loop_3d_pencil distributed_loop_3d_pencil.cpp)
+target_link_libraries(hpxfft_distributed_loop_3d_pencil PRIVATE HPXFFT::hpxfft)
+
+add_executable(hpxfft_distributed_loop_3d_slab distributed_loop_3d_slab.cpp)
+target_link_libraries(hpxfft_distributed_loop_3d_slab PRIVATE HPXFFT::hpxfft)

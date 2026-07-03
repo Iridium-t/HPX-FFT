@@ -29,9 +29,9 @@ struct vector_3d
     // move constructor
     vector_3d(vector_3d<T> &&) noexcept;
     // destructor
-    ~vector_3d() = default;
+    ~vector_3d();
     // operators
-    vector_3d<T> &operator=(vector_3d<T> &);
+    vector_3d<T> &operator=(const vector_3d<T> &);
     vector_3d<T> &operator=(vector_3d<T> &&) noexcept;
     T &operator()(std::size_t i, std::size_t j, std::size_t k);
     const T &operator()(std::size_t i, std::size_t j, std::size_t k) const;
@@ -71,29 +71,29 @@ struct vector_3d
     }
 
   private:
-    // serialization support
     friend class hpx::serialization::access;
 
     template <typename Archive>
-    void serialize(Archive &ar, const unsigned int version)
+    void save(Archive& ar, const unsigned int) const
     {
-        // clang-format off
-        ar &n_x_;
-        ar &n_y_;
-        ar &n_z_;
-        ar &size_;
-
-        if (Archive::is_loading::value)
-        {
-            values_ = new T[size_];
-        }
-
+        ar << n_x_ << n_y_ << n_z_ << size_;
         for (std::size_t i = 0; i < size_; ++i)
-        {
-            ar &values_[i];
-        }
-        // clang-format on
+            ar << values_[i];
     }
+
+    template <typename Archive>
+    void load(Archive& ar, const unsigned int)
+    {
+        ar >> n_x_ >> n_y_ >> n_z_ >> size_;
+        delete[] values_;          // free any prior buffer (nullptr-safe)
+        values_ = nullptr;
+        if (size_ > 0)
+            values_ = new T[size_];
+        for (std::size_t i = 0; i < size_; ++i)
+            ar >> values_[i];
+    }
+
+    HPX_SERIALIZATION_SPLIT_MEMBER()
 };
 
 template <typename T>
@@ -134,32 +134,66 @@ inline vector_3d<T>::vector_3d(std::size_t n_x, std::size_t n_y, std::size_t n_z
 
 template <typename T>
 inline vector_3d<T>::vector_3d(const vector_3d<T> &src) :
+    values_(nullptr),
+    size_(src.size_),
     n_x_(src.n_x_),
     n_y_(src.n_y_),
-    n_z_(src.n_z_),
-    size_(src.size_),
-    values_(new T[size_])
+    n_z_(src.n_z_)
 {
+    values_ = (size_ > 0) ? new T[size_] : nullptr;
     std::copy(src.begin(), src.end(), begin());
 }
 
 template <typename T>
 inline vector_3d<T>::vector_3d(vector_3d<T> &&mv) noexcept
+  : values_(mv.values_)
+  , size_(mv.size_)
+  , n_x_(mv.n_x_)
+  , n_y_(mv.n_y_)
+  , n_z_(mv.n_z_)
 {
-    swap(*this, mv);
+    mv.values_ = nullptr;
+    mv.size_ = 0;
+    mv.n_x_ = 0;
+    mv.n_y_ = 0;
+    mv.n_z_ = 0;
 }
 
 template <typename T>
-inline vector_3d<T> &vector_3d<T>::operator=(vector_3d<T> &src)
+inline vector_3d<T>::~vector_3d()
 {
-    swap(*this, src);
+    delete[] values_;
+}
+
+template <typename T>
+inline vector_3d<T> &vector_3d<T>::operator=(const vector_3d<T> &src)
+{
+    if (this != &src)
+    {
+        vector_3d<T> tmp(src);
+        swap(*this, tmp);
+    }
     return *this;
 }
 
 template <typename T>
 inline vector_3d<T> &vector_3d<T>::operator=(vector_3d<T> &&mv) noexcept
 {
-    swap(*this, mv);
+    if (this != &mv)
+    {
+        delete[] values_;
+        values_ = mv.values_;
+        size_ = mv.size_;
+        n_x_ = mv.n_x_;
+        n_y_ = mv.n_y_;
+        n_z_ = mv.n_z_;
+
+        mv.values_ = nullptr;
+        mv.size_ = 0;
+        mv.n_x_ = 0;
+        mv.n_y_ = 0;
+        mv.n_z_ = 0;
+    }
     return *this;
 }
 

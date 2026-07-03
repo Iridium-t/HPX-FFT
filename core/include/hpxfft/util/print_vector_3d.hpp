@@ -4,6 +4,8 @@
 #include "vector_3d.hpp"
 #include <iostream>
 
+typedef double real;
+
 namespace hpxfft::util
 {
 

@@ -5,6 +5,8 @@
 #include "../../util/adapter_fftw.hpp"
 #include "../../util/vector_3d.hpp"              // for hpxfft::util::vector_3d
 #include <hpx/timing/high_resolution_timer.hpp>  // for hpx::chrono::high_resolution_timer
+#include <hpx/future.hpp>
+#include <hpx/modules/collectives.hpp>
 
 typedef double real;
 
@@ -19,6 +21,9 @@ struct base
 
   public:
     base() = default;
+
+    virtual void initialize(vector_3d values_vec, const std::string COMM_FLAG, const std::string PLAN_FLAG) = 0;
+    virtual vector_3d fft_3d_r2c() = 0;
 
     real get_measurement(std::string name);
 
@@ -54,11 +59,12 @@ struct base
     vector_comm values_prep_;
     vector_comm permuted_values_prep_;
     vector_comm communication_vec_;
-    std::vector<hpx::future<std::vector<real>>> communication_futures_;
+    std::vector<hpx::future<vector_3d>> communication_futures_;
     // locality information
     std::size_t this_locality_, num_localities_;
     // communicators
     std::string COMM_FLAG_;
+    std::vector<std::string> basename_storage_;
     std::vector<const char *> basenames_;
     std::vector<hpx::collectives::communicator> communicators_;
 };
@@ -79,8 +85,8 @@ inline void hpxfft::fft3D::distributed::base::fft_1d_c2c_y_inplace(const std::si
 
 inline void hpxfft::fft3D::distributed::base::fft_1d_c2c_x_inplace(const std::size_t i, const std::size_t j)
 {
-    fftw_c2c_adapter_dir_x_.execute(reinterpret_cast<fftw_complex *>(values_vec_.vector_y(i, j)),
-                                    reinterpret_cast<fftw_complex *>(values_vec_.vector_y(i, j)));
+    fftw_c2c_adapter_dir_x_.execute(reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)),
+                                    reinterpret_cast<fftw_complex *>(values_vec_.vector_z(i, j)));
 }
 }  // namespace hpxfft::fft3D::distributed
 #endif  // hpxfft_distributed_base_3D_H_INCLUDED

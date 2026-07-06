@@ -473,7 +473,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::pencil::
         // global sychronization
         if(scatter_sync_)
         {
-            for (std::size_t i = 0; i < num_localities_; ++i)
+            for (std::size_t i = 0; i < localities_per_dir_; ++i)
             {
                 communication_vec_[i] = communication_futures_[i].get();
             }
@@ -520,7 +520,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::pencil::
         [&](auto i)
         {
             // for every z
-            for(std::size_t j; j<n_z_local_; ++j)
+            for(std::size_t j = 0; j<n_z_local_; ++j)
             {
                 // 1D FFT c2c in x-direction
                 fft_1d_c2c_x_inplace(i,j);
@@ -548,7 +548,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::pencil::
         // global synchronization
         if(scatter_sync_)
         {
-            for (std::size_t i = 0; i < num_localities_; ++i)
+            for (std::size_t i = 0; i < localities_per_dir_; ++i)
             {
                 communication_vec_[i] = communication_futures_[i].get();
             }
@@ -605,7 +605,7 @@ hpxfft::fft3D::distributed::vector_3d hpxfft::fft3D::distributed::loop::pencil::
         // global sychronization
         if(scatter_sync_)
         {
-            for (std::size_t i = 0; i < num_localities_; ++i)
+            for (std::size_t i = 0; i < localities_per_dir_; ++i)
             {
                 communication_vec_[i] = communication_futures_[i].get();
             }

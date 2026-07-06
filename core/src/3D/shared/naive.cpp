@@ -40,28 +40,38 @@ void hpxfft::fft3D::shared::naive::initialize(vector_3d values_vec, const std::s
     measurements_["plan_flops"] =
         dim_r_z_ * (add_z + mul_z + fma_z) + dim_c_y_ * (add_y + mul_y + fma_y) + dim_c_x_ * (add_x + mul_x + fma_x);
     // resize futures
-    fft_z_r2c_futures_.resize(dim_c_x_ * dim_c_y_);
+    fft_z_r2c_futures_.resize(dim_c_x_);
     permute_first_futures_.resize(dim_c_x_);
-    fft_y_c2c_futures_.resize(dim_c_x_ * dim_c_z_);
+    fft_y_c2c_futures_.resize(dim_c_x_);
     permute_second_futures_.resize(dim_c_z_);
-    fft_x_c2c_futures_.resize(dim_c_y_ * dim_c_z_);
+    fft_x_c2c_futures_.resize(dim_c_y_);
     permute_third_futures_.resize(dim_c_y_);
 }
 
 // wrapper for fft_1d_r2c_inplace to use with hpx::async
-void hpxfft::fft3D::shared::naive::fft_1d_r2c_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j)
+// processes an entire row (all j) for outer index i to limit the number of tasks
+void hpxfft::fft3D::shared::naive::fft_1d_r2c_row_wrapper(naive *th, const std::size_t i)
 {
-    th->fft_1d_r2c_inplace(i, j);
+    for (std::size_t j = 0; j < th->dim_c_y_; ++j)
+    {
+        th->fft_1d_r2c_inplace(i, j);
+    }
 }
 
-void hpxfft::fft3D::shared::naive::fft_1d_c2c_y_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j)
+void hpxfft::fft3D::shared::naive::fft_1d_c2c_y_row_wrapper(naive *th, const std::size_t i)
 {
-    th->fft_1d_c2c_y_inplace(i, j);
+    for (std::size_t j = 0; j < th->dim_c_z_; ++j)
+    {
+        th->fft_1d_c2c_y_inplace(i, j);
+    }
 }
 
-void hpxfft::fft3D::shared::naive::fft_1d_c2c_x_inplace_wrapper(naive *th, const std::size_t i, const std::size_t j)
+void hpxfft::fft3D::shared::naive::fft_1d_c2c_x_row_wrapper(naive *th, const std::size_t i)
 {
-    th->fft_1d_c2c_x_inplace(i, j);
+    for (std::size_t j = 0; j < th->dim_c_z_; ++j)
+    {
+        th->fft_1d_c2c_x_inplace(i, j);
+    }
 }
 
 void hpxfft::fft3D::shared::naive::permute_shared_x_z_y_wrapper(naive *th, const std::size_t slice_x)
@@ -87,10 +97,7 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
     // First dimension (Z)
     for (std::size_t i = 0; i < dim_c_x_; ++i)
     {
-        for (std::size_t j = 0; j < dim_c_y_; ++j)
-        {
-            fft_z_r2c_futures_[i * dim_c_y_ + j] = hpx::async(&fft_1d_r2c_inplace_wrapper, this, i, j);
-        }
+        fft_z_r2c_futures_[i] = hpx::async(&fft_1d_r2c_row_wrapper, this, i);
     }
     hpx::shared_future<vector_future> all_fft_z_r2c_futures = hpx::when_all(fft_z_r2c_futures_);
 
@@ -111,15 +118,12 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
     // Second dimension (Y)
     for (std::size_t i = 0; i < dim_c_x_; ++i)
     {
-        for (std::size_t j = 0; j < dim_c_z_; ++j)
-        {
-            fft_y_c2c_futures_[i * dim_c_z_ + j] = all_permute_first_futures.then(
-                [=, this](hpx::shared_future<vector_future> r)
-                {
-                    r.get();
-                    return hpx::async(&fft_1d_c2c_y_inplace_wrapper, this, i, j);
-                });
-        }
+        fft_y_c2c_futures_[i] = all_permute_first_futures.then(
+            [=, this](hpx::shared_future<vector_future> r)
+            {
+                r.get();
+                return hpx::async(&fft_1d_c2c_y_row_wrapper, this, i);
+            });
     }
     hpx::shared_future<vector_future> all_fft_y_c2c_futures = hpx::when_all(fft_y_c2c_futures_);
     all_permute_first_futures.get();
@@ -142,15 +146,12 @@ hpxfft::fft3D::shared::vector_3d hpxfft::fft3D::shared::naive::fft_3d_r2c()
     // Third dimension (X)
     for (std::size_t i = 0; i < dim_c_y_; ++i)
     {
-        for (std::size_t j = 0; j < dim_c_z_; ++j)
-        {
-            fft_x_c2c_futures_[i * dim_c_z_ + j] = all_permute_second_futures.then(
-                [=, this](hpx::shared_future<vector_future> r)
-                {
-                    r.get();
-                    return hpx::async(&fft_1d_c2c_x_inplace_wrapper, this, i, j);
-                });
-        }
+        fft_x_c2c_futures_[i] = all_permute_second_futures.then(
+            [=, this](hpx::shared_future<vector_future> r)
+            {
+                r.get();
+                return hpx::async(&fft_1d_c2c_x_row_wrapper, this, i);
+            });
     }
     hpx::shared_future<vector_future> all_fft_x_c2c_futures = hpx::when_all(fft_x_c2c_futures_);
     all_permute_second_futures.get();

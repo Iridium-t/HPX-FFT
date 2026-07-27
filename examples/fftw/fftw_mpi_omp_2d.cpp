@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
     if (plan_flag == "measure")
     {
         FFTW_PLAN_FLAG = FFTW_MEASURE;
+        std::cout << "measure flag recognized" << std::endl
     }
     else if (plan_flag == "patient")
     {

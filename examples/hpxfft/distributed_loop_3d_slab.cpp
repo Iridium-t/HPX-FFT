@@ -24,10 +24,11 @@ int hpx_main(hpx::program_options::variables_map &vm)
     const std::size_t dim_c_z = dim_r_z / 2 + 1;
     // division parameter
     std::size_t n_x_local = dim_c_x / num_localities;;
-    std::size_t n_y_local = dim_c_x / num_localities;;
+    std::size_t n_y_local = dim_c_y / num_localities;;
     if (n_y_local * num_localities != dim_c_y || n_x_local * num_localities != dim_c_x)
     {
         std::cout << "Matrix dimensions are not divisible by number of localities, ending program" << std::endl;
+        std::cout << "dim_c_x: " << dim_c_x << " n_x_local*num_localities: " << n_x_local * num_localities << "dim_c_y: " << dim_c_y << " n_y_local*num_localities: " << n_y_local * num_localities << std::endl;
         return hpx::finalize();
     }
 
@@ -56,11 +57,15 @@ int hpx_main(hpx::program_options::variables_map &vm)
     }
 
     hpx::distributed::barrier("Starting Barrier").wait();
+    std::cout << "starting initalization " << this_locality << std::endl;
     auto start_total = t.now();
     fft_computer.initialize(std::move(values_vec), run_flag, plan_flag);
+    std::cout << "initialization ended " << this_locality << std::endl;
     hpx::distributed::barrier("initialize Barrier").wait();
     auto stop_init = t.now();
+    std::cout << "starting computation " << this_locality << std::endl;
     values_vec = fft_computer.fft_3d_r2c();
+    std::cout << "computation ended" << this_locality << std::endl;
     auto stop_total = t.now();
 
     // optional: print results
@@ -119,11 +124,11 @@ int hpx_main(hpx::program_options::variables_map &vm)
 
         if (print_header)
         {
-            runtime_file << "n_threads;n_x;n_y;n_z;plan;comm_flag;decomposition;total;initialization;" << "fft_3d_total;" << "first_fftw;"
+            runtime_file << "n_ranks;n_threads;n_x;n_y;n_z;plan;comm_flag;decomposition;total;initialization;" << "fft_3d_total;" << "first_fftw;"
                         << "first_permute;" << "second_fftw;" << "first_split;" << "first_comm;" << "second_permute;"
                         << "third_fftw;" << "second_split;" <<"second_comm;" <<"third_permute\n";
         }
-        runtime_file << hpx::get_os_thread_count() << ";" << dim_c_x << ";" << dim_c_y << ";" << dim_r_z 
+        runtime_file << num_localities << ";" << hpx::get_os_thread_count() << ";" << dim_c_x << ";" << dim_c_y << ";" << dim_r_z 
                 << ";" << plan_flag << ";" << run_flag << ";" << total << ";" << init 
                 << ";" << fft_computer.get_measurement("total") << ";"
                 << fft_computer.get_measurement("first_fftw") << ";" 

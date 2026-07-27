@@ -80,20 +80,25 @@ int hpx_main(hpx::program_options::variables_map &vm)
     if (this_locality == 0)
     {       
         std::string msg =
-            "\nLocality {15} -  {1} pencil decomposition:\n"
+            "\nLocality {20} -  {1} pencil decomposition:\n"
             "Total runtime : {2}\n"
             "Initialization: {3}\n"
             "FFT 2D runtime: {4}\n"
             "FFTW r2c z    : {5}\n"
-            "First permute : {6}\n"
-            "FFTW c2c y    : {7}\n"
-            "First split   : {8}\n"
-            "First comm    : {9}\n"
-            "Second permute: {10}\n"
-            "FFTW c2c x    : {11}\n"
-            "Second split  : {12}\n"
-            "Second comm   : {13}\n"
-            "Third permite : {14}\n";
+            "First split   : {6}\n"
+            "First comm    : {7}\n"
+            "First permute : {8}\n"
+            "FFTW c2c y    : {9}\n"
+            "Second split  : {10}\n"
+            "Second comm   : {11}\n"
+            "Second permute: {12}\n"
+            "FFTW c2c x    : {13}\n"
+            "Third split   : {14}\n"
+            "Third comm    : {15}\n"
+            "Third permute : {16}\n"
+            "Fourth split  : {17}\n"
+            "Fourth comm   : {18}\n"
+            "Fourth permute: {19}\n";
         hpx::util::format_to(
             std::cout,
             msg,
@@ -102,15 +107,20 @@ int hpx_main(hpx::program_options::variables_map &vm)
             init,
             fft_computer.get_measurement("total"),
             fft_computer.get_measurement("first_fftw"),
-            fft_computer.get_measurement("first_permute"),
-            fft_computer.get_measurement("second_fftw"),
             fft_computer.get_measurement("first_split"),
             fft_computer.get_measurement("first_comm"),
-            fft_computer.get_measurement("second_permute"),
-            fft_computer.get_measurement("third_fftw"),
+            fft_computer.get_measurement("first_permute"),
+            fft_computer.get_measurement("second_fftw"),
             fft_computer.get_measurement("second_split"),
             fft_computer.get_measurement("second_comm"),
+            fft_computer.get_measurement("second_permute"),
+            fft_computer.get_measurement("third_fftw"),
+            fft_computer.get_measurement("third_split"),
+            fft_computer.get_measurement("third_comm"),
             fft_computer.get_measurement("third_permute"),
+            fft_computer.get_measurement("fourth_split"),
+            fft_computer.get_measurement("fourth_comm"),
+            fft_computer.get_measurement("fourth_permute"),
             this_locality)
             << std::flush;
         
@@ -121,23 +131,28 @@ int hpx_main(hpx::program_options::variables_map &vm)
 
         if (print_header)
         {
-            runtime_file << "n_threads;n_x;n_y;n_z;plan;comm_flag;decomposition;total;initialization;" << "fft_3d_total;" << "first_fftw;"
-                        << "first_permute;" << "second_fftw;" << "first_split;" << "first_comm;" << "second_permute;"
-                        << "third_fftw;" << "second_split;" <<"second_comm;" <<"third_permute\n";
+            runtime_file << "n_ranks;n_threads;n_x;n_y;n_z;plan;comm_flag;total;initialization;" << "fft_3d_total;" << "first_fftw;"
+                        << "first_split;" << "first_comm;" << "first_permute;" << "second_fftw;" << "second_split;" << "second_comm;" << "second_permute;"
+                        << "third_fftw;" << "third_split;" << "third_comm;" << "third_permute" << "fourth_split;" << "fourth_comm;" << "fourth_permute\n";
         }
-        runtime_file << hpx::get_os_thread_count() << ";" << dim_c_x << ";" << dim_c_y << ";" << dim_r_z 
+        runtime_file<< num_localities << ";" << hpx::get_os_thread_count() << ";" << dim_c_x << ";" << dim_c_y << ";" << dim_r_z 
                 << ";" << plan_flag << ";" << run_flag << ";" << total << ";" << init 
                 << ";" << fft_computer.get_measurement("total") << ";"
-                << fft_computer.get_measurement("first_fftw") << ";" 
-                << fft_computer.get_measurement("first_permute") << ";"
-                << fft_computer.get_measurement("second_fftw") << ";"
+                << fft_computer.get_measurement("first_fftw") << ";"
                 << fft_computer.get_measurement("first_split") << ";"
                 << fft_computer.get_measurement("first_comm") << ";"
-                << fft_computer.get_measurement("second_permute") << ";"
-                << fft_computer.get_measurement("third_fftw") << ";"
+                << fft_computer.get_measurement("first_permute") << ";"
+                << fft_computer.get_measurement("second_fftw") << ";"
                 << fft_computer.get_measurement("second_split") << ";"
                 << fft_computer.get_measurement("second_comm") << ";"
-                << fft_computer.get_measurement("third_permute") << ";\n";
+                << fft_computer.get_measurement("second_permute") << ";"
+                << fft_computer.get_measurement("third_fftw") << ";"
+                << fft_computer.get_measurement("third_split") << ";"
+                << fft_computer.get_measurement("third_comm") << ";"
+                << fft_computer.get_measurement("third_permute") << ";"
+                << fft_computer.get_measurement("fourth_split") << ";"
+                << fft_computer.get_measurement("fourth_comm") << ";"
+                << fft_computer.get_measurement("fourth_permute") << ";\n";
         runtime_file.close();
     }
 

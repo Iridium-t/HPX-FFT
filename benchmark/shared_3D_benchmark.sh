@@ -27,7 +27,7 @@ HOSTNAME=$(hostname -s)
 if [[ "$HOSTNAME" == "rostam1" ]]; then
     PARTITION=buran
     THREAD_POW=5
-    NODE=buran01
+    NODE=buran15
     module load gcc/14.2.0
 elif [[ "$HOSTNAME" == "login1" ]]; then
     PARTITION=short
